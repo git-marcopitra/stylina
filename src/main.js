@@ -13,8 +13,10 @@ const getStylinStyles = (element) => {
   return stylinAttributes;
 };
 
+const stylinChildren = (mainElement) => [...mainElement.children].forEach(stylin);
+
 const stylin = (element) => {
-  renderStylin(element);
+  stylinChildren(element);
   const styles = getStylinStyles(element);
 
   if (!styles.length) return;
@@ -33,8 +35,7 @@ const stylin = (element) => {
     "beforebegin",
     `<style>.${id} { ${parsedStyles} }</style>`
   );
+  styles.forEach(({ name }) => element.removeAttribute(`in-${name}`));
 };
 
-const renderStylin = (mainElement) => [...mainElement.children].forEach(stylin);
-
-renderStylin(document.body);
+stylin(document.body)
