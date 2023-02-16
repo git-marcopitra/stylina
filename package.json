@@ -1,0 +1,26 @@
+{
+  "name": "stylina",
+  "version": "0.0.1",
+  "description": "stylin.js version for native html, styles builtin element",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/git-marcopitra/stylina.git"
+  },
+  "keywords": [
+    "vanilla",
+    "builtin",
+    "style",
+    "html",
+    "css"
+  ],
+  "author": "git-marcopitra",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/git-marcopitra/stylina/issues"
+  },
+  "homepage": "https://github.com/git-marcopitra/stylina#readme"
+}
