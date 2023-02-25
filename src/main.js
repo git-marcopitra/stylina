@@ -1,3 +1,12 @@
+const stylinId = `stylin-${crypto.randomUUID().split("-")[0]}`;
+
+document.head.insertAdjacentHTML(
+  "beforeend",
+  `<style id="${stylinId}"></style>`
+);
+
+const stylinStyleElement = document.querySelector(`style#${stylinId}`);
+
 const NON_STYLE_ELEMENTS = ["script"];
 
 const getStylinStyles = (element) => {
@@ -29,17 +38,12 @@ const stylin = (element) => {
   const id = `stylin-${crypto.randomUUID().split("-")[0]}`;
 
   const parsedStyles = styles.reduce(
-    (acc, { name, value }) => `${acc}
-    ${name}: ${value};
-  `,
+    (acc, { name, value }) => `${acc}\t${name}: ${value};\n`,
     ""
   );
 
   element.className += id;
-  element.insertAdjacentHTML(
-    "beforebegin",
-    `<style>.${id} { ${parsedStyles} }</style>`
-  );
+  stylinStyleElement.innerHTML += `.${id} {\n ${parsedStyles} }\n`;
   styles.forEach(({ name }) => element.removeAttribute(`in-${name}`));
 };
 
