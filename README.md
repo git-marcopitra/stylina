@@ -1,3 +1,25 @@
+# Stylina
+
+A lightweight library for vanilla, to style builtin element using the prefix key `in-`
+
+## Get Started
+
+You just need to add the cdn (`https://unpkg.com/stylina@<version>`) to your `script` tag , make sure that you add the correct version as you want, [see our versions](https://www.npmjs.com/package/stylina?activeTab=versions).
+
+```html
+<html lang="en">
+  ...
+  <body>
+    ...
+    <script src="https://unpkg.com/stylina@<version>"></script>
+  </body>
+</html>
+```
+
+
+## Usage
+
+```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -38,5 +60,6 @@
     </div>
     <div in-use-class="circle,green-circle">green</div>
   </body>
-  <script src="https://unpkg.com/stylina@0.0.1-alpha.4"></script>
+  <script src="https://unpkg.com/stylina<@version>"></script>
 </html>
+```

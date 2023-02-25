@@ -23,14 +23,17 @@ let classes = [];
 const getStylinControllers = (element) => {
   const attributes = new Array(...element.attributes);
 
-  if (!attributes.length) return [];
+  if (!attributes.length) return {};
 
   const stylinControllers = attributes
     .filter(({ name }) => STYLIN_CONTROLLERS.includes(name))
-    .map(({ name, value }) => ({
-      value,
-      name: name.replace("in-", ""),
-    }));
+    .reduce(
+      (acc, { name, value }) => ({
+        ...acc,
+        [name.replace("in-", "")]: value,
+      }),
+      {}
+    );
 
   return stylinControllers;
 };
@@ -52,53 +55,94 @@ const getStylinStyles = (element) => {
   return stylinAttributes;
 };
 
-// STYLING ELEMENTS
-const getStyle = (element, defClassNameList) => {
-  const styles = getStylinStyles(element);
+const parseStyle = (styles) =>
+  styles.reduce((acc, { name, value }) => `${acc}\t${name}: ${value};\n`, "");
 
-  if (!styles.length) return;
+const getReusableClassByStyle = (parsedStyles) =>
+  classes.find(([, style]) => style === parsedStyles)?.[0];
 
-  const parsedStyles = styles.reduce(
-    (acc, { name, value }) => `${acc}\t${name}: ${value};\n`,
-    ""
+const makeStyleId = ({ defClassName, useClassNameList, reusableClass }) => {
+  const styleId = `stylin-${crypto.randomUUID().split("-")[0]}`;
+
+  if (!defClassName && !useClassNameList.length && !reusableClass)
+    return [[styleId], []];
+
+  if (!defClassName && useClassNameList.length && !reusableClass)
+    return [[...[useClassNameList.join('.')], styleId], []];
+
+  if (!defClassName && !useClassNameList.length && reusableClass)
+    return [[], [reusableClass.split(" ")]];
+
+  if (!defClassName && useClassNameList.length && reusableClass)
+    return [[useClassNameList.join('.')], [reusableClass.split(" ")]];
+
+  if (defClassName && !useClassNameList.length && !reusableClass)
+    return [[defClassName], []];
+
+  const combinedList = [useClassNameList.join('.')].map(
+    (useClassName) => `${defClassName}.${useClassName}`
   );
 
-  const reusableClass = classes.find(
-    ([, style]) => style === parsedStyles
-  )?.[0];
+  return [combinedList, []];
+};
 
-  const styleId =
-    reusableClass ??
-    defClassNameList[0] ??
-    `stylin-${crypto.randomUUID().split("-")[0]}`;
+const removeAttributes = ({ attributes, element }) =>
+  attributes.forEach((attribute) => element.removeAttribute(attribute));
 
-  const defClassName = `.${defClassNameList.join(`,\n.`) || styleId}`;
+const addNewClass = (classNameList, styles) => {
+  if (!classNameList.length) return;
 
-  styles.forEach(({ name }) => element.removeAttribute(`in-${name}`));
+  classes.push([classNameList.join(" "), styles]);
+};
 
-  classes.push([styleId, parsedStyles]);
+// STYLING ELEMENTS
+const getStyle = ({ element, defClassName, useClassNameList }) => {
+  const styles = getStylinStyles(element);
+  
+  if (!styles.length && !useClassNameList.length) return;
+  
+  const parsedStyles = parseStyle(styles);
+  
+  const reusableClass = getReusableClassByStyle(parsedStyles);
+  
+  const [styleId, reusableClassList] = makeStyleId({
+    defClassName,
+    useClassNameList,
+    reusableClass,
+  });
+  
+  if (styleId.length) {
+    const styleTagElement = defClassName
+      ? stylinCustomStyleElement
+      : stylinStyleElement;
 
-  return {
-    id: styleId,
-    filledClass: reusableClass ? "" : `${defClassName} {\n ${parsedStyles} }\n`,
-  };
+    const generatedClassName = `.${styleId.join(`,\n.`)}`;
+
+    styleTagElement.innerHTML += `${generatedClassName} {\n ${parsedStyles} }\n`;
+  }
+
+  addNewClass(styleId, parsedStyles);
+
+  removeAttributes({
+    element,
+    attributes: styles.map(({ name }) => `in-${name}`),
+  });
+
+  return [...styleId, ...reusableClassList].join(" ");
 };
 
 // APPLYING CONTROLLERS
 const getControllerClassNames = (element) => {
   const controllers = getStylinControllers(element);
 
-  let useClassNameList = [];
-  let defClassNameList = [];
+  const defClassName = controllers["def-class"];
+  const useClassNameList = [...new Set(controllers["use-class"]?.split(","))];
 
-  controllers.forEach(({ name, value }) => {
-    if (name == "def-class") defClassNameList.push(value);
-    if (name == "use-class") useClassNameList.push(value);
-  });
+  STYLIN_CONTROLLERS.forEach((controller) =>
+    element.removeAttribute(controller)
+  );
 
-  controllers.forEach(({ name }) => element.removeAttribute(`in-${name}`));
-
-  return { defClassNameList, useClassNameList };
+  return { defClassName, useClassNameList };
 };
 
 const stylinChildren = (mainElement) =>
@@ -108,25 +152,14 @@ const stylin = (element) => {
   if (NON_STYLE_ELEMENTS.includes(element.localName)) return;
   stylinChildren(element);
 
-  const { defClassNameList, useClassNameList } =
-    getControllerClassNames(element);
+  const { defClassName, useClassNameList } = getControllerClassNames(element);
 
-  const styleTagElement = defClassNameList.length
-    ? stylinCustomStyleElement
-    : stylinStyleElement;
+  const styleId = getStyle({ element, defClassName, useClassNameList });
 
-  const style = getStyle(element, defClassNameList);
-
-  if (style) {
-    styleTagElement.innerHTML += style.filledClass;
-
-    useClassNameList.push(style.id);
-  }
-
-  const useClassName = useClassNameList.join(" ");
-
-  element.className += useClassName;
+  if (styleId) element.className += styleId.replace(/\./g, " ");
 };
 
 // STYLIN INIT
 stylin(document.body);
+
+console.log(">> classes :: ", classes);

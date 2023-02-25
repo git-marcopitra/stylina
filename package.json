@@ -1,6 +1,6 @@
 {
   "name": "stylina",
-  "version": "0.0.1-alpha.4",
+  "version": "0.0.1-alpha.5",
   "description": "stylin.js version for native html, styles builtin element",
   "main": "src/main.js",
   "scripts": {
