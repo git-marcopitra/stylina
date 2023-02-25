@@ -4,13 +4,20 @@ const STYLIN_CONTROLLERS = ["in-def-class", "in-use-class"];
 
 // STYLIN BOOTSTRAP
 const stylinId = `stylin-${crypto.randomUUID().split("-")[0]}`;
+const stylinCustomId = `stylin-${crypto.randomUUID().split("-")[0]}__custom`;
 
 document.head.insertAdjacentHTML(
   "beforeend",
-  `<style id="${stylinId}"></style>`
+  `<style id="${stylinCustomId}"></style>\n
+  <style id="${stylinId}"></style>`
 );
 
+const stylinCustomStyleElement = document.querySelector(
+  `style#${stylinCustomId}`
+);
 const stylinStyleElement = document.querySelector(`style#${stylinId}`);
+
+let classes = [];
 
 // STYLIN MAIN FUNCTIONS
 const getStylinControllers = (element) => {
@@ -56,19 +63,24 @@ const getStyle = (element, defClassNameList) => {
     ""
   );
 
-  const styleId = `stylin-${crypto.randomUUID().split("-")[0]}`;
+  const reusableClass = classes.find(
+    ([, style]) => style === parsedStyles
+  )?.[0];
 
-  defClassNameList.push(styleId);
+  const styleId =
+    reusableClass ??
+    defClassNameList[0] ??
+    `stylin-${crypto.randomUUID().split("-")[0]}`;
 
-  console.log(">> defClassNameList :: ", defClassNameList);
-
-  const defClassName = `.${defClassNameList.join(`,\n.`)}`;
+  const defClassName = `.${defClassNameList.join(`,\n.`) || styleId}`;
 
   styles.forEach(({ name }) => element.removeAttribute(`in-${name}`));
 
+  classes.push([styleId, parsedStyles]);
+
   return {
     id: styleId,
-    filledClass: `${defClassName} {\n ${parsedStyles} }\n`,
+    filledClass: reusableClass ? "" : `${defClassName} {\n ${parsedStyles} }\n`,
   };
 };
 
@@ -99,10 +111,14 @@ const stylin = (element) => {
   const { defClassNameList, useClassNameList } =
     getControllerClassNames(element);
 
+  const styleTagElement = defClassNameList.length
+    ? stylinCustomStyleElement
+    : stylinStyleElement;
+
   const style = getStyle(element, defClassNameList);
 
   if (style) {
-    stylinStyleElement.innerHTML += style.filledClass;
+    styleTagElement.innerHTML += style.filledClass;
 
     useClassNameList.push(style.id);
   }
