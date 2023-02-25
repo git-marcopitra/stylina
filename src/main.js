@@ -1,3 +1,5 @@
+const NON_STYLE_ELEMENTS = ["script"];
+
 const getStylinStyles = (element) => {
   const attributes = new Array(...element.attributes);
 
@@ -13,9 +15,12 @@ const getStylinStyles = (element) => {
   return stylinAttributes;
 };
 
-const stylinChildren = (mainElement) => [...mainElement.children].forEach(stylin);
+const stylinChildren = (mainElement) =>
+  [...mainElement.children].forEach(stylin);
 
 const stylin = (element) => {
+  if (NON_STYLE_ELEMENTS.includes(element.localName)) return;
+
   stylinChildren(element);
   const styles = getStylinStyles(element);
 
@@ -38,4 +43,4 @@ const stylin = (element) => {
   styles.forEach(({ name }) => element.removeAttribute(`in-${name}`));
 };
 
-stylin(document.body)
+stylin(document.body);
